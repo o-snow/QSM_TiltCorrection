@@ -13,7 +13,7 @@ For Windows users please use the Windows version and for Linux/Mac users please 
 ## Requirements
 
 Windows version requires Windows Subsystem for Linux installed (https://docs.microsoft.com/en-us/windows/wsl/install-win10
-All versions require FSL (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSL) [2,3.4]
+All versions require FSL (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSL) [2,3,4]
 
 ## Usage
 
