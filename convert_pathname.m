@@ -3,7 +3,7 @@ function linux_pathname = convert_pathname(windows_pathname)
 % in the linux subsystem for windows 
 %
 % INPUT: 
-% windows_pathname = the pathname to a file/directory in windows syntax
+% windows_pathname = the pathname to a file\directory in windows syntax
 %
 % OUTPUT:
 % linux_pathname = the pathname converted to linux with /mnt/c/ 
