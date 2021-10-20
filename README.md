@@ -20,7 +20,7 @@ All versions require FSL (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSL) [2,3,4]
 Parameters struct is used for this function. The struct must have the following fields:
 
 ```
-Parameters.Image(struct) - Nifty struct containing the image to be rotated and the appropriate header information
+Parameters.Image(struct) - Nifti struct containing the image to be rotated and the appropriate header information
 
 Parameters.DesiredAxis(vector) - vector of the desired orientation of the B0 direction in the image frame
 
@@ -33,6 +33,7 @@ Parameters.FSLPath(string) - string to fsl directory (e.g. '/usr/local/fsl')
 Parameters.Padding(int or array) - the amount to pad in all directions (if int) or an array to pad (if array) to ensure no cropping of volume of interest (optional)
 
 ```
+The inputted Parameters.Image is a Nifti struct containing the fields: Image.hdr that contains the header information and Image.img that contains the image volume. We recommend reading the image volume from file using  `load_untouch_nii.m` from the Tools for NIfTI and ANALYZE image (https://uk.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image).
 
 *Recommended use:*
 
