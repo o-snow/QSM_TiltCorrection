@@ -10,9 +10,10 @@ function [RotatedImage, OriginalAxis] = RotateNiftiWindows(Parameters)
 %               (https://brainder.org/2012/09/23/the-nifti-file-format/)
 %
 %               WINDOWS VERSION. Requires: Windows Subsystem for Linux (WSL)
+%                                          Nifti struct obtained from load_untouch_nii.m (https://uk.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image)
 %
 % Inputs:
-%   Parameters (struct): Parameters.Image(struct) - Nifti struct containing the image to be rotated and the appropriate header information
+%   Parameters (struct): Parameters.Image(struct) - Nifti struct containing the image to be rotated and the appropriate header information (from Nifti Toolbox for MATLAB)
 %                        Parameters.DesiredAxis(vector) - vector of the desired orientation of the B0 direction in the image frame
 %                        Parameters.Reverse(boolean) - whether to rotate towards the desired axis or back the other way (if reorienting back to original)
 %                        Parameters.Interpolation(int) - 'trilinear', 'nearestneighbour', 'sinc', 'spline'
