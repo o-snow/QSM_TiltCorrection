@@ -1,6 +1,6 @@
 # QSM_TiltCorrection
 
-From 2020, this toolbox is being mantained and expanded at the Department of Medical Physics and Biomedical Engineering, University College London, UK, by Oliver Kiersnowski under the supervision of Prof. Karin Shmueli.
+From 2020, this software is being mantained at the Department of Medical Physics and Biomedical Engineering, University College London, UK, by Oliver Kiersnowski under the supervision of Prof. Karin Shmueli.
 
 ## Description
 Software to carry out alignment of the image axes with the MRI scanner axes, such that the image is aligned with the main magnetic field. For QSM processing we recommend rotating the total field map to the scanner axes prior to any background field removal to ensure accurate background field removal and susceptibility calculation [1].
