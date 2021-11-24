@@ -20,6 +20,8 @@ All versions require FSL (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSL) [2,3,4]
 
 Tools for NIfTI and ANALYZE image (https://uk.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image) for inputting the correct nifti structure into the `Parameters` struct.
 
+Please ensure the inputted image is in the standard orientation, using <fslreorient2std> if required (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Orientation%20Explained).
+
 ## Usage
 
 Parameters struct is used for this function. The struct must have the following fields:
