@@ -119,13 +119,17 @@ if Image.hdr.hist.qform_code > 0
     b = Image.hdr.hist.quatern_b;
     c = Image.hdr.hist.quatern_c;
     d = Image.hdr.hist.quatern_d;
-    a = sqrt(1 - (b^2 + c^2 + d^2));
+    if abs((b^2 + c^2 + d^2) - 1) < 10*eps('single')
+        a = 0;
+    else
+        a = sqrt(1 - (b^2 + c^2 + d^2));
+    end
 
     R = [a*a+b*b-c*c-d*d, 2*b*c-2*a*d, 2*b*d+2*a*c;...
          2*b*c+2*a*d, a*a+c*c-b*b-d*d, 2*c*d-2*a*b;...
          2*b*d-2*a*c, 2*c*d+2*a*b, a*a+d*d-c*c-b*b];
 
-    B0direction = R*DesiredAxis; 
+    B0direction = R*[0;0;1]; 
     B0direction(3) = B0direction(3)/q; % the true B0 direction in the image frame
     
 % Method 3:
@@ -137,7 +141,7 @@ elseif Image.hdr.hist.sform_code > 0
     R = R(1:3,1:3);
     R(:,3) = R(:,3)*q;
     
-    B0direction = R*DesiredAxis; 
+    B0direction = R*[0;0;1]; 
     B0direction(3) = B0direction(3)/q; % the true B0 direction in the image frame
 end
 
