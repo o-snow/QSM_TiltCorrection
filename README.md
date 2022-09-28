@@ -7,11 +7,8 @@ Software to carry out alignment of the image axes with the MRI scanner axes, suc
 
 Folder:      `<Rotation_Software>`
 
-Functions:   `<RotateNiftiWindows.m>`
-             `<RotateNiftiLinux.m>`
+Functions:   `<RotateNifti.m>`
              `<convert_pathname.m>`
-
-For Windows users please use the Windows version and for Linux/Mac users please use the Linux version. 
 
 ## Requirements
 
@@ -51,7 +48,7 @@ If it is desired for the final QSM to be in the same orientation as the acquired
 For ease in use, we recommend using a Parameters struct that stays constant throughout the pipeline. Therefore name it differently to other Parameter structs in your pipeline. E.g. ParametersForRot.Input = FieldMap; and so on... This allows reversal of the rotation without having to define all of the initial fields again, if you have had to clear the Parameters struct. 
 
 # References
-[1]: Kiersnowski OC, Karsa A, Thornton JS, Shmueli K. The Effect of Oblique Image Slices on the Accuracy of Quantitative Susceptibility Mapping and a Robust Tilt Correction Method #0794. Proc. Int. Soc. Magn. Reson. Med. 2021 doi: 10.1002/mrm.22135.
+[1]: Kiersnowski, Oliver C., et al. "The Effect of Oblique Image Acquisition on the Accuracy of Quantitative Susceptibility Mapping and a Robust Tilt Correction Method." bioRxiv (2021).
 
 [2]: M.W. Woolrich, S. Jbabdi, B. Patenaude, M. Chappell, S. Makni, T. Behrens, C. Beckmann, M. Jenkinson, S.M. Smith. Bayesian analysis of neuroimaging data in FSL. NeuroImage, 45:S173-86, 2009
 
