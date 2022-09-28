@@ -92,9 +92,9 @@ if isfield(Parameters, 'FSLPath')
        end
    end
 else
-    if exist('/usr/local/fsl/bin','folder')
+    if exist('/usr/local/fsl/bin','dir')
         FSLPath = '/usr/local/fsl/';
-    elseif exist('/usr/fsl/bin','folder')
+    elseif exist('/usr/fsl/bin','dir')
         FSLPath = '/usr/fsl/';
     else
         warndlg('Please enter the path to the FSL bin for Parameters.NiftyPath!', 'Warning')
@@ -166,6 +166,8 @@ elseif Image.hdr.hist.sform_code > 0
     
     B0direction = R*[0;0;1]; 
     B0direction(3) = B0direction(3)/q; % the true B0 direction in the image frame
+else
+    error('No orientation information found in NIfTI header, cannot rotate without reference.')
 end
 
 % Rotate the image such that the true B0 direction is aligned with the k-axis in the image frame
