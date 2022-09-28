@@ -1,4 +1,4 @@
-function [RotatedImage, OriginalAxis] = RotateNiftiLinux(Parameters)
+function [RotatedImage, OriginalAxis] = RotateNifti(Parameters)
 %
 % Description:
 %               Function to rotate an image volume in Nifti format into
@@ -9,8 +9,10 @@ function [RotatedImage, OriginalAxis] = RotateNiftiLinux(Parameters)
 %               Nifti orientation information:
 %               (https://brainder.org/2012/09/23/the-nifti-file-format/)
 %
-%               LINUX/MAC VERSION. 
-%               Requires: Nifti struct obtained from load_untouch_nii.m (https://uk.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image)
+%               Requires: 
+% Nifti struct obtained from load_untouch_nii.m (https://uk.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image)
+% If used on Windows Subsystem for Linux (WSL) needs "wslpath" and fsl 
+% installed in the wsl environment
 %
 % Inputs:
 %   Parameters (struct): Parameters.Image(struct) - Nifty struct containing the image to be rotated and the appropriate header information (from Nifti Toolbox for MATLAB)
@@ -34,6 +36,8 @@ function [RotatedImage, OriginalAxis] = RotateNiftiLinux(Parameters)
 %   Magnetic Resonance Imaging Group, 
 %   Department of Medical Physics and Biomedical Engineering, 
 %   University College London, UK, 2021
+%
+% Last edited August 2022
 
 % Read input parameters
 if isfield(Parameters, 'Image')
@@ -70,16 +74,32 @@ if isfield(Parameters, 'Interpolation')
 else
     Interpolation = 'trilinear'; % default trilinear interpolation
 end
+isWSL = false;
 if isfield(Parameters, 'FSLPath')
    if ~isstring(Parameters.FSLPath) && ~ischar(Parameters.FSLPath)
        warndlg('Please enter path to FSL bin in string format for Parameters.FSLPath!', 'Warning')
        return;
    else
        FSLPath = char(Parameters.FSLPath);
+       [flirtstatus, ~] = system(sprintf('%s/bin/flirt -version',FSLPath));
+       if flirtstatus ~= 0 % FLIRT Not found in path, perhaps on WSL?
+           [flirtstatus, ~] = system(sprintf('wsl %s/bin/flirt -version',FSLPath));
+           if flirtstatus==0
+               isWSL = true;
+           else
+               error('FLIRT could not be found on: %s', FSLPath);
+           end
+       end
    end
 else
-    warndlg('Please enter the path to the FSL bin for Parameters.NiftyPath!', 'Warning')
-    return;
+    if exist('/usr/local/fsl/bin','dir')
+        FSLPath = '/usr/local/fsl/';
+    elseif exist('/usr/fsl/bin','dir')
+        FSLPath = '/usr/fsl/';
+    else
+        warndlg('Please enter the path to the FSL bin for Parameters.NiftyPath!', 'Warning')
+        return;
+    end
 end
 if isfield(Parameters, 'Padding')
     if ~isa(Parameters.Padding, 'int') && ~isa(Parameters.Padding, 'double')
@@ -87,25 +107,27 @@ if isfield(Parameters, 'Padding')
         return;
     else
         Padding = Parameters.Padding;
-            if size(Padding) == 1
-                PaddingArray = [1,1,1]*Padding; % both sides of each dimension
-                if ~Reverse
-                    Image.img = padarray(Image.img, PaddingArray, 0, 'both');
-                    Image.hdr.dime.dim(2:4) = size(Image.img, 1:3);
-                end
-            elseif size(Padding, 1) == 3 || size(Padding, 2) == 3
-                PaddingArray = Padding;
-                if ~Reverse
-                    Image.img = padarray(Image.img, PaddingArray, 0, 'both');
-                    Image.hdr.dime.dim(2:4) = size(Image.img, 1:3);
-                end
+        if size(Padding) == 1
+            PaddingArray = [1,1,1]*Padding; % both sides of each dimension
+            if ~Reverse
+                Image.img = padarray(Image.img, PaddingArray, 0, 'both');
+                Image.hdr.dime.dim(2:4) = size(Image.img, 1:3);
+            end
+        elseif size(Padding, 1) == 3 || size(Padding, 2) == 3
+            PaddingArray = Padding;
+            if ~Reverse
+                Image.img = padarray(Image.img, PaddingArray, 0, 'both');
+                Image.hdr.dime.dim(2:4) = size(Image.img, 1:3);
+            end
         end
     end
 end
 
-% Create a temp folder in current directory for the outputs
-TempDir = [pwd '/temp_rotate_nifti'];
-mkdir(TempDir)
+% Create a temp folder for the outputs
+% Folder will be in current dir on windows, in /tmp/ on linux.
+TempDir = tempname(pwd);
+mkdir(TempDir);
+dirCleanup = onCleanup(@() rmdir(TempDir, 's')); % Remove temporary files
 
 % Read the qfac value
 q = Image.hdr.dime.pixdim(1);
@@ -119,10 +141,11 @@ if Image.hdr.hist.qform_code > 0
     b = Image.hdr.hist.quatern_b;
     c = Image.hdr.hist.quatern_c;
     d = Image.hdr.hist.quatern_d;
-    if abs((b^2 + c^2 + d^2) - 1) < 10*eps('single')
+    det = 1 - (b^2 + c^2 + d^2);
+    if abs(det) < 10*eps('single')
         a = 0;
     else
-        a = sqrt(1 - (b^2 + c^2 + d^2));
+        a = sqrt(det);
     end
 
     R = [a*a+b*b-c*c-d*d, 2*b*c-2*a*d, 2*b*d+2*a*c;...
@@ -143,12 +166,20 @@ elseif Image.hdr.hist.sform_code > 0
     
     B0direction = R*[0;0;1]; 
     B0direction(3) = B0direction(3)/q; % the true B0 direction in the image frame
+else
+    error('No orientation information found in NIfTI header, cannot rotate without reference.')
 end
 
 % Rotate the image such that the true B0 direction is aligned with the k-axis in the image frame
 
 % Calculate rotation vector and angle
 v_c = cross(B0direction, DesiredAxis);
+if norm(v_c) == 0
+    warning('Image provided is already aligned with desired axis, returning input.');
+    RotatedImage = Parameters.Image;
+    OriginalAxis = B0direction;
+    return
+end
 v_c = v_c/norm(v_c);
 v_angle = acos(dot(B0direction,DesiredAxis));
 
@@ -172,6 +203,7 @@ RotMatrix = [t*v_c(1)*v_c(1) + c,        t*v_c(1)*v_c(2) - s*v_c(3), t*v_c(1)*v_
              t*v_c(1)*v_c(3) - s*v_c(2), t*v_c(2)*v_c(3) + s*v_c(1), t*v_c(3)*v_c(3) + c,        0.0; ...
              0.0, 0.0, 0.0, 1.0];
 
+% Transpose rotation matrix if reversing rotation
 if Reverse
     RotMatrix = TransCentre*RotMatrix'*TransOrigin;
 else
@@ -179,35 +211,52 @@ else
 end
 
 % Save everything into the temp folder
-dlmwrite([TempDir '/Matrix.txt'], RotMatrix, 'delimiter',' ');
-
+Matrix_path = ([TempDir filesep 'Matrix.txt']);
+Image_path = [TempDir filesep 'Image.nii'];
+output_path = [TempDir filesep 'RotatedImage.nii'];
+%
+writematrix(RotMatrix, Matrix_path,  'delimiter',' ');
 try
-    save_untouch_nii(Image, [TempDir '/Image.nii']);
+    save_untouch_nii(Image, Image_path);
 catch
-    save_nii(Image, [TempDir '/Image.nii']);  
+    save_nii(Image, Image_path);  
 end
 
-% Convert the pathnames into linux 
-Matrix_path = convert_pathname([TempDir '/Matrix.txt']);
-Image_path = convert_pathname([TempDir '/Image.nii']);
-output = convert_pathname([TempDir '/RotatedImage.nii']);
+if isWSL
+    % Convert the pathnames into linux if using FSL on WSL
+    Matrix_path = convert_pathname(Matrix_path);
+    Image_path = convert_pathname(Image_path);
+    output_path = convert_pathname(output_path);
+end
 
-unix_cmd = sprintf(['. %s' '/etc/fslconf/fsl.sh;'...
-                    'FSLOUTPUTTYPE=NIFTI; %s' '/bin/flirt -noresample -nosearch -paddingsize 100 -setbackground 0 -in %s ' ...
-                    '-ref %s -applyxfm -init %s -interp %s -out %s'],...
+rotate_cmd = sprintf(['. %s/etc/fslconf/fsl.sh;FSLOUTPUTTYPE=NIFTI;'...
+                         '%s/bin/flirt -noresample -nosearch '...
+                         '-paddingsize 100 -setbackground 0 '...
+                         '-in %s -ref %s -applyxfm -init %s -interp %s '...
+                         '-out %s'],...
                     FSLPath, FSLPath, Image_path, Image_path,...
-                    Matrix_path, Interpolation, output); 
+                    Matrix_path, Interpolation, output_path); 
 
-system(unix_cmd);
+if isWSL
+    rotate_cmd = ['wsl ' rotate_cmd];
+end
+
+% Run FLIRT to perform rotation
+[status,result] = system(rotate_cmd);
+if status ~= 0 || not(isempty(result))% Flirt does not give return codes :-(
+    error('FLIRT seems to have failed:\n%s', result);
+end
+
+if isWSL
+    output_path = convert_pathname(output_path, '-w');
+end
 
 % Load in the image and delete temp
 try
-    RotatedImage = load_untouch_nii([TempDir '/RotatedImage.nii']);
+    RotatedImage = load_untouch_nii(output_path);
 catch
-    RotatedImage = load_nii([TempDir '/RotatedImage.nii']);
+    RotatedImage = load_nii(output_path);
 end
-
-rmdir(TempDir, 's');
 
 % Unpad the images if reversed back to original orientation and if padded
 if Reverse

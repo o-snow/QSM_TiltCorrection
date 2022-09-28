@@ -1,4 +1,4 @@
-function linux_pathname = convert_pathname(windows_pathname)
+function out_pathname = convert_pathname(in_pathname, flags)
 % function to convert the windows pathname into a linux pathname that works
 % in the linux subsystem for windows 
 %
@@ -11,15 +11,28 @@ function linux_pathname = convert_pathname(windows_pathname)
 % Author: Oliver Kiersnowski
 % Date: November 2019
 
-[filepath, name, ext] = fileparts(windows_pathname);
+if nargin < 2
+    flags = '-u'; % default from Windows to WSL path
+end
 
-drive = filepath(1);
-filepath = strrep(filepath, [drive ':\'], ['/mnt/' lower(drive) '/']);
+% [filepath, name, ext] = fileparts(in_pathname);
+% 
+% drive = filepath(1);
+% filepath = strrep(filepath, [drive ':\'], ['/mnt/' lower(drive) '/']);
+% 
+% % replace all of the backslashes with forward slashes
+% 
+% filepath = strrep(filepath, '\', '/');
+% 
+% out_pathname = [filepath '/' name ext];
 
-% replace all of the backslashes with forward slashes
+convert_command = sprintf('wsl wslpath %s "%s"',flags, in_pathname);
+[status, out_pathname] = system(convert_command);
 
-filepath = strrep(filepath, '\', '/');
+if status~=0
+    error('path conversion failed with result:\n %s',out_pathname);
+end
 
-linux_pathname = [filepath '/' name ext];
+out_pathname = deblank(out_pathname); % Fix this neater?
 
 end
