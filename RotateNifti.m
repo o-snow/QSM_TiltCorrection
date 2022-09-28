@@ -81,7 +81,8 @@ if isfield(Parameters, 'FSLPath')
        return;
    else
        FSLPath = char(Parameters.FSLPath);
-       if isempty(FSLPath)
+       [flirtstatus, ~] = system(sprintf('%s/bin/flirt -version',FSLPath));
+       if flirtstatus ~= 0 % FLIRT Not found in path, perhaps on WSL?
            [flirtstatus, ~] = system(sprintf('wsl %s/bin/flirt -version',FSLPath));
            if flirtstatus==0
                isWSL = true;
@@ -124,7 +125,7 @@ end
 
 % Create a temp folder for the outputs
 % Folder will be in current dir on windows, in /tmp/ on linux.
-TempDir = tempname;
+TempDir = tempname(pwd);
 mkdir(TempDir);
 dirCleanup = onCleanup(@() rmdir(TempDir, 's')); % Remove temporary files
 
@@ -236,14 +237,16 @@ rotate_cmd = sprintf(['. %s/etc/fslconf/fsl.sh;FSLOUTPUTTYPE=NIFTI;'...
 
 if isWSL
     rotate_cmd = ['wsl ' rotate_cmd];
-    % Convert output pathname back to windows to load output
-    output_path = convert_pathname(output_path);
 end
 
 % Run FLIRT to perform rotation
 [status,result] = system(rotate_cmd);
 if status ~= 0 || not(isempty(result))% Flirt does not give return codes :-(
     error('FLIRT seems to have failed:\n%s', result);
+end
+
+if isWSL
+    output_path = convert_pathname(output_path, '-w');
 end
 
 % Load in the image and delete temp
