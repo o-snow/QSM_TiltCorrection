@@ -48,7 +48,7 @@ If it is desired for the final QSM to be in the same orientation as the acquired
 For ease in use, we recommend using a Parameters struct that stays constant throughout the pipeline. Therefore name it differently to other Parameter structs in your pipeline. E.g. ParametersForRot.Input = FieldMap; and so on... This allows reversal of the rotation without having to define all of the initial fields again, if you have had to clear the Parameters struct. 
 
 # References
-[1]: Kiersnowski, Oliver C., et al. "The Effect of Oblique Image Acquisition on the Accuracy of Quantitative Susceptibility Mapping and a Robust Tilt Correction Method." bioRxiv (2021).
+[1]: Kiersnowski OC, Karsa A, Wastling SJ, Thornton JS, Shmueli K. Investigating the effect of oblique image acquisition on the accuracy of QSM and a robust tilt correction method. Magn Reson Med. 2022;1-18. doi: 10.1002/mrm.29550
 
 [2]: M.W. Woolrich, S. Jbabdi, B. Patenaude, M. Chappell, S. Makni, T. Behrens, C. Beckmann, M. Jenkinson, S.M. Smith. Bayesian analysis of neuroimaging data in FSL. NeuroImage, 45:S173-86, 2009
 
