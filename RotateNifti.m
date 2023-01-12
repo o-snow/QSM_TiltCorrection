@@ -123,6 +123,12 @@ if isfield(Parameters, 'Padding')
     end
 end
 
+% Change the intercept and slope to 0 and 1, respectively 
+OriginalIntercept = Image.hdr.dime.scl_inter; 
+OriginalSlope = Image.hdr.dime.scl_slope;
+Image.hdr.dime.scl_inter = 0;
+Image.hdr.dime.scl_slope = 1;
+
 % Create a temp folder for the outputs
 % Folder will be in current dir on windows, in /tmp/ on linux.
 TempDir = tempname(pwd);
@@ -257,6 +263,10 @@ try
 catch
     RotatedImage = load_nii(output_path);
 end
+
+% Add back in the original intercept and slope
+RotatedImage.hdr.dime.scl_inter = OriginalIntercept;
+RotatedImage.hdr.dime.scl_slope = OriginalSlope;
 
 % Unpad the images if reversed back to original orientation and if padded
 if Reverse
